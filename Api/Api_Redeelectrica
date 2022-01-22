@@ -1,0 +1,108 @@
+#https://www.ree.es/es/apidatos
+# tipo de solicitude da info: GET /{lang}/datos/{category}/{widget}?[query]
+# Electricidade xerada en Galicia no 2021
+import requests
+endpoint= 'https://apidatos.ree.es/es/datos/generacion/estructura-generacion?start_date=2021-01-01T00:00&end_date=2021-12-31T23:59&time_trunc=year&geo_trunc=electric_system&geo_limit=ccaa&geo_ids=17'
+
+response = requests.get(endpoint)
+total =response.json()['included'][-1]['attributes']['values'][0]['value']
+print("O total de enerxía xerada en Galicia no 2021 foi de: {}".format (total))
+
+
+
+#Electricidade xerada por cada tipo en Galicia
+import pandas as pd
+
+endpoint= 'https://apidatos.ree.es/es/datos/generacion/estructura-generacion?start_date=2021-01-01T00:00&end_date=2021-12-31T23:59&time_trunc=year&geo_trunc=electric_system&geo_limit=ccaa&geo_ids=17'
+response = requests.get(endpoint)
+response.json()
+tipos = response.json()['included']
+datosGalicia = []
+
+for i in range(0,len(tipos)):
+    tipo = response.json()['included'][i]['attributes']['title']
+    total = response.json()['included'][i]['attributes']['values'][0]['value']
+    datosGalicia.append([tipo,total])
+
+print(datosGalicia)
+
+xeradoEnGalicia = datosGalicia[-1]
+df_datosGalicia = pd.DataFrame(datosGalicia,columns=['Tipo Xerado','Total producido Galicia'])
+df_datosGalicia = df_datosGalicia.set_index('Tipo Xerado')
+df_datosGalicia
+
+#print(contaxios)
+
+
+
+#Electricidade xerada por cada tipo na Península
+import pandas as pd
+import requests
+endpoint= 'https://apidatos.ree.es/es/datos/generacion/estructura-generacion?start_date=2021-01-01T00:00&end_date=2021-12-31T23:59&time_trunc=year&geo_trunc=electric_system&geo_limit=ccaa&geo_ids=8741'
+#response = requests.get(endpoint)
+#response.status_code
+#response.json()
+
+response = requests.get(endpoint)
+response.json()
+tipos = response.json()['included']
+datosPeninsula = []
+
+for i in range(0,len(tipos)):
+    tipo = response.json()['included'][i]['attributes']['title']
+    total = response.json()['included'][i]['attributes']['values'][0]['value']
+    datosPeninsula.append([tipo,total])
+
+print(datosPeninsula)
+xeradoNaPeninsula = datosPeninsula[-1]
+
+df_datosPeninsula = pd.DataFrame(datosPeninsula,columns=['Tipo Xerado','Total producido Península'])
+df_datosPeninsula = df_datosPeninsula.set_index('Tipo Xerado')
+df_datosPeninsula
+
+#print(contaxios)
+
+
+
+#presentar os datos nun dataframe conxunto
+df_conxunto = pd.merge(df_datosPeninsula, df_datosGalicia, on='Tipo Xerado', how='outer')
+
+df_conxunto
+
+
+
+#Demanda enerxética en Galicia no 2021
+
+endpoint= 'https://apidatos.ree.es/es/datos/demanda/evolucion?start_date=2021-01-01T00:00&end_date=2021-12-31T23:59&time_trunc=year&geo_trunc=electric_system&geo_limit=ccaa&geo_ids=17'
+response = requests.get(endpoint)
+response.json()
+demanda = response.json()['included'][0]['attributes']['values'][0]['value']
+print("A demanda enerxética de Galicia no 2021 foi de: {}".format(demanda))
+
+Xerado = xeradoEnGalicia[1]
+print("En Galicia xerase {} de enerxía".format(Xerado))
+
+Total = Xerado - demanda
+print("En Galicia xeramos {} de enerxía máis da que consumimos".format(Total))
+
+
+
+#Demanda de enerxía na Península no 2021
+#https://apidatos.ree.es/es/datos/demanda/evolucion?start_date=2021-01-01T00:00&end_date=2021-12-31T23:59&time_trunc=year&geo_trunc=electric_system&geo_limit=ccaa&geo_ids=8741
+
+endpoint= 'https://apidatos.ree.es/es/datos/demanda/evolucion?start_date=2021-01-01T00:00&end_date=2021-12-31T23:59&time_trunc=year&geo_trunc=electric_system&geo_limit=ccaa&geo_ids=8741'
+response = requests.get(endpoint)
+response.json()
+demanda = response.json()['included'][0]['attributes']['values'][0]['value']
+print("A demanda enerxética da Península no 2021 foi de: {}".format(demanda))
+
+Xerado = xeradoNaPeninsula[1]
+print("Na península xerase {} de enerxía".format(Xerado))
+
+Total = Xerado - demanda
+print("Na península xeramos {} de enerxía máis da que consumimos".format(Total))
+
+
+
+
+
